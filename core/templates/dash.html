@@ -406,12 +406,14 @@
                                         {% comment %} Check if user is logged in and is a citizen {% endcomment %}
                                         {% if user.is_authenticated and user.role == "citizen" %}
                                             {% comment %} Assume 'user_supported' logic is handled by a method on the petition object or a separate context variable {% endcomment %}
-                                            {% comment %} NOTE: Since we cannot pass 'user_supported' easily here, we use a generic button and rely on AJAX response/logic to handle supported state. {% endcomment %}
+                                            {% comment %} NOTE: We use a data attribute 'is-supported' which you MUST populate in your Python view. {% endcomment %}
                                             <button 
-                                                class="btn btn-primary support-btn" 
+                                                class="btn support-btn {% if p.user_supported %}btn-secondary{% else %}btn-primary{% endif %}" 
                                                 data-id="{{ p.id }}" 
-                                                data-supported="false"
-                                                style="padding: 6px 12px; font-size: 13px;">❤️ Support This Petition
+                                                data-supported="{% if p.user_supported %}true{% else %}false{% endif %}"
+                                                {% if p.user_supported %}disabled{% endif %}
+                                                style="padding: 6px 12px; font-size: 13px;">
+                                                {% if p.user_supported %}✅ Supported{% else %}❤️ Support This Petition{% endif %}
                                             </button>
                                         {% endif %}
                                     </div>
@@ -424,7 +426,7 @@
                                 </div>
                             {% endif %}
                         </div>
-
+  </div> <!-- END of publicPetitionsView -->
 
                     {% comment %} ----------------------------------------- {% endcomment %}
                     {% comment %} 2. EVIDENCE VIEW {% endcomment %}
@@ -490,16 +492,36 @@
                     {% comment %} 3. DEPOSITIONS VIEW (Placeholder) {% endcomment %}
                     {% comment %} ----------------------------------------- {% endcomment %}
                     <div id="depositionsView" style="display: none;">
-                        <div class="header-with-cta"><div class="header-title">Depositions View</div></div>
-                        <p style="color: #64748B;">Placeholder for Deposition List/Builder.</p>
+                        <div class="header-with-cta">
+                            <div class="header-title">Depositions View</div>
+                            <input type="text" id="depositionsSearchInput" class="search-box" placeholder="Search Depositions..." 
+                                style="width: 200px; padding: 6px 12px; font-size: 14px;">
+                        </div>
+                        <div class="list-wrapper" data-search-target="depositions">
+                            {% comment %} Placeholder Content {% endcomment %}
+                            <p class="card-item" data-search-text="Smith Deposition Draft 1">📄 Smith Deposition Draft 1</p>
+                            <p class="card-item" data-search-text="Jones Witness Interview">🎥 Jones Witness Interview</p>
+                            <p class="card-item" data-search-text="Expert Report Summary">📋 Expert Report Summary</p>
+                            <p class="empty-message" style="display:none; color: #64748B; padding: 10px; text-align: center;">No depositions found.</p>
+                        </div>
                     </div>
 
                     {% comment %} ----------------------------------------- {% endcomment %}
                     {% comment %} 4. ACTIVITY VIEW (Placeholder) {% endcomment %}
                     {% comment %} ----------------------------------------- {% endcomment %}
                     <div id="activityView" style="display: none;">
-                        <div class="header-with-cta"><div class="header-title">Activity/Timeline View</div></div>
-                        <p style="color: #64748B;">Placeholder for Timeline/Activity Feed.</p>
+                        <div class="header-with-cta">
+                            <div class="header-title">Activity/Timeline View</div>
+                            <input type="text" id="activitySearchInput" class="search-box" placeholder="Search Activity..." 
+                                style="width: 200px; padding: 6px 12px; font-size: 14px;">
+                        </div>
+                        <div class="list-wrapper" data-search-target="activity">
+                            {% comment %} Placeholder Content {% endcomment %}
+                            <p class="card-item" data-search-text="User John Doe logged in">👤 User John Doe logged in (1 hour ago)</p>
+                            <p class="card-item" data-search-text="Petition X approved">✅ Petition X approved by Admin (yesterday)</p>
+                            <p class="card-item" data-search-text="New evidence uploaded">⬆️ New evidence uploaded (5 days ago)</p>
+                            <p class="empty-message" style="display:none; color: #64748B; padding: 10px; text-align: center;">No activity found.</p>
+                        </div>
                     </div>
 
                     {% comment %} ----------------------------------------- {% endcomment %}
@@ -524,8 +546,8 @@
             const listWrapper = document.querySelector(`#${listTargetId} [data-search-target]`);
             if (!listWrapper) return;
             
-            // Query selector to match both petition and evidence cards
-            const cards = listWrapper.querySelectorAll('.petition-card-item, .evidence-card-item');
+            // Query selector to match all searchable card types
+            const cards = listWrapper.querySelectorAll('.petition-card-item, .evidence-card-item, .card-item');
             const queryLower = query.toLowerCase();
             let matchesFound = 0;
 
@@ -533,7 +555,7 @@
                 const searchText = card.dataset.searchText ? card.dataset.searchText.toLowerCase() : '';
                 const isMatch = searchText.includes(queryLower);
                 
-                // FIX: Use an empty string to revert to default display 
+                // Set display to '' to revert to default, or 'none' to hide
                 card.style.display = isMatch ? '' : 'none';
                 if (isMatch) {
                     matchesFound++;
@@ -543,8 +565,8 @@
             // Update empty message visibility
             const emptyMessage = listWrapper.querySelector('.empty-message');
             if (emptyMessage) {
-                // Only show the original empty message if the list is truly empty and the search query is blank
-                emptyMessage.style.display = matchesFound === 0 && queryLower === '' ? 'block' : 'none';
+                // Show the empty message if no matches were found *and* the list originally had data (or if the list was initially empty)
+                emptyMessage.style.display = (matchesFound === 0) ? 'block' : 'none';
             }
         }
         
@@ -604,12 +626,27 @@
                 });
             }
             
-            // Listener 2: Evidence Search Input (Added to evidenceView in the HTML)
+            // Listener 2: Evidence Search Input
             const evidenceSearchInput = document.getElementById('evidenceSearchInput');
             if (evidenceSearchInput) {
                 evidenceSearchInput.addEventListener('keyup', (event) => {
-                    // Always apply filter to the EvidenceView since this is a specific input
                     applyLiveFilter(event.target.value, 'evidenceView');
+                });
+            }
+            
+            // Listener 3: Depositions Search Input (Placeholder Logic)
+            const depositionsSearchInput = document.getElementById('depositionsSearchInput');
+            if (depositionsSearchInput) {
+                depositionsSearchInput.addEventListener('keyup', (event) => {
+                    applyLiveFilter(event.target.value, 'depositionsView');
+                });
+            }
+
+            // Listener 4: Activity Search Input (Placeholder Logic)
+            const activitySearchInput = document.getElementById('activitySearchInput');
+            if (activitySearchInput) {
+                activitySearchInput.addEventListener('keyup', (event) => {
+                    applyLiveFilter(event.target.value, 'activityView');
                 });
             }
 
