@@ -437,33 +437,60 @@
                         </div>
 
                         <!-- ✅ Evidence Upload Form -->
-                        <div class="upload-card" style="margin-bottom: 20px; padding: 16px;">
-                            <h3 style="margin-top: 0; font-size: 16px; margin-bottom: 12px;">Upload New Evidence</h3>
-                            {% if user.role == "citizen" %}
-                            <!-- MODIFIED: Removed action URL; AJAX handles submission -->
-                            <form method="post" enctype="multipart/form-data" id="evidenceUploadForm">
-                                {% csrf_token %}
-                                <div style="margin-bottom: 10px;">
-                                    <input type="text" name="title" placeholder="Enter title" required class="input" style="width: 100%;">
-                                </div>
-                                <div style="margin-bottom: 10px;">
-                                    <select name="file_type" class="input" style="width: 100%;">
-                                        <option value="image">Image</option>
-                                        <option value="pdf">PDF</option>
-                                        <option value="video">Video</option>
-                                        <option value="doc">Document</option>
-                                        <option value="other" selected>Other</option>
-                                    </select>
-                                </div>
-                                <div style="margin-bottom: 10px;">
-                                    <input type="file" name="file" required style="width: 100%; padding: 6px;">
-                                </div>
-                                <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Upload Evidence</button>
-                            </form>
-                            {% else %}
-                                <p style="color: #64748B;">Only citizens can upload evidence.</p>
-                            {% endif %}
-                        </div>
+                  <div class="card" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+  <h3 style="margin-bottom: 0.75rem;">Upload New Evidence</h3>
+
+  {% if user.role == "citizen" %}
+  <form method="post" enctype="multipart/form-data" id="evidenceUploadForm">
+    {% csrf_token %}
+
+    <div style="margin-bottom: 0.5rem;">
+      <input type="text" name="title" placeholder="Enter title" required 
+             class="input" 
+             style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <div style="margin-bottom: 0.5rem;">
+      <input type="text" name="rule_violation" placeholder="Rule Violation (e.g., IPC Section 420)" 
+             class="input" 
+             style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <div style="margin-bottom: 0.5rem;">
+      <input type="text" name="party_involved" placeholder="Party Involved (The one who harmed)" 
+             class="input" 
+             style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <div style="margin-bottom: 0.5rem;">
+      <input type="text" name="harm" placeholder="Harm Caused (The damage done)" 
+             class="input" 
+             style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <div style="margin-bottom: 0.5rem;">
+      <select name="file_type" class="input" 
+              style="width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px;">
+        <option value="image">Image</option>
+        <option value="pdf">PDF</option>
+        <option value="video">Video</option>
+        <option value="doc">Document</option>
+        <option value="other" selected>Other</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 0.75rem;">
+      <input type="file" name="file" required 
+             style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+    </div>
+
+    <button type="submit" class="btn" 
+            style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+      Upload Evidence
+    </button>
+  </form>
+  {% endif %}
+</div>
 
                         <!-- ✅ Evidence List -->
                         <h3 style="margin-top: 0; font-size: 16px; margin-bottom: 12px;">Uploaded Files</h3>
@@ -494,18 +521,103 @@
                     <div id="depositionsView" style="display: none;">
                         <div class="header-with-cta">
                             <div class="header-title">Depositions View</div>
-                            <input type="text" id="depositionsSearchInput" class="search-box" placeholder="Search Depositions..." 
-                                style="width: 200px; padding: 6px 12px; font-size: 14px;">
                         </div>
-                        <div class="list-wrapper" data-search-target="depositions">
-                            {% comment %} Placeholder Content {% endcomment %}
-                            <p class="card-item" data-search-text="Smith Deposition Draft 1">📄 Smith Deposition Draft 1</p>
-                            <p class="card-item" data-search-text="Jones Witness Interview">🎥 Jones Witness Interview</p>
-                            <p class="card-item" data-search-text="Expert Report Summary">📋 Expert Report Summary</p>
-                            <p class="empty-message" style="display:none; color: #64748B; padding: 10px; text-align: center;">No depositions found.</p>
-                        </div>
-                    </div>
+                    <!-- Include DataTables CSS & JS -->
+<link rel="stylesheet" 
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
+<!-- Custom Table Styling -->
+<style>
+  /* Add blue border and cell lines */
+  #evidenceTable {
+    border: 2px solid #007bff !important;
+    border-collapse: collapse !important;
+  }
+  #evidenceTable th,
+  #evidenceTable td {
+    border: 1px solid #007bff !important;
+    padding: 8px 10px !important;
+    text-align: left;
+  }
+  #evidenceTable th {
+    background-color: #eaf3ff !important;
+  }
+  #evidenceTable tr:nth-child(even) {
+    background-color: #f9fbff !important;
+  }
+  #evidenceTable tr:hover {
+    background-color: #e3f0ff !important;
+  }
+</style>
+
+<div class="card" style="margin-bottom: 1rem;">
+  {% if evidences %}
+  <div style="overflow-x: auto;">
+    <table id="evidenceTable" class="display" style="width: 100%;">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Rule Violation</th>
+          <th>Party Involved</th>
+          <th>Harm</th>
+          <th>Type</th>
+          <th>Uploaded At</th>
+          <th>Status</th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in evidences %}
+        <tr>
+          <td>{{ e.title }}</td>
+          <td>{{ e.rule_violation|default:"—" }}</td>
+          <td>{{ e.party_involved|default:"—" }}</td>
+          <td>{{ e.harm|truncatechars:80|default:"—" }}</td>
+          <td>{{ e.file_type }}</td>
+          <td>{{ e.uploaded_at|date:"Y-m-d H:i" }}</td>
+          <td>
+            {% if e.verification_status == "verified" %}
+              <span style="color: green;">Verified</span>
+            {% elif e.verification_status == "rejected" %}
+              <span style="color: red;">Rejected</span>
+            {% else %}
+              <span style="color: orange;">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ e.file.url }}" download 
+               style="padding: 5px 10px; background: #007bff; color: #fff; border-radius: 4px; text-decoration: none;">
+               Download
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p>No evidences available yet.</p>
+  {% endif %}
+</div>
+
+<!-- Activate DataTable -->
+<script>
+  $(document).ready(function() {
+    $('#evidenceTable').DataTable({
+      pageLength: 5,
+      lengthMenu: [5, 10, 20, 50],
+      order: [[5, 'desc']],
+      columnDefs: [
+        { orderable: false, targets: [7] } // disable sorting on Download column
+      ]
+    });
+  });
+</script>
+
+
+                    </div>
                     {% comment %} ----------------------------------------- {% endcomment %}
                     {% comment %} 4. ACTIVITY VIEW (Placeholder) {% endcomment %}
                     {% comment %} ----------------------------------------- {% endcomment %}

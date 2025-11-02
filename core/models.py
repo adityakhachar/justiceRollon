@@ -15,12 +15,19 @@ class User(AbstractUser):
 
 class Evidence(models.Model):
     FILE_TYPES = (
-        ("image","Image"),
-        ("pdf","PDF"),
-        ("video","Video"),
-        ("doc","Document"),
-        ("other","Other"),
+        ("image", "Image"),
+        ("pdf", "PDF"),
+        ("video", "Video"),
+        ("doc", "Document"),
+        ("other", "Other"),
     )
+
+    VERIFICATION_STATUS = (
+        ("pending", "Pending"),
+        ("verified", "Verified"),
+        ("rejected", "Rejected"),
+    )
+
     uploader = models.ForeignKey(User, on_delete=models.CASCADE, related_name="evidences")
     file = models.FileField(upload_to="evidence/")
     title = models.CharField(max_length=255)
@@ -28,7 +35,12 @@ class Evidence(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
     size_bytes = models.PositiveIntegerField(null=True, blank=True)
     case_tag = models.CharField(max_length=128, blank=True)
-    verification_status = models.CharField(max_length=20, choices=(("pending","Pending"),("verified","Verified"),("rejected","Rejected")), default="pending")
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS, default="pending")
+
+    # 🆕 New fields
+    rule_violation = models.CharField(max_length=255, blank=True)
+    party_involved = models.CharField(max_length=255, blank=True)
+    harm = models.TextField(blank=True)
 
     def save(self, *args, **kwargs):
         if self.file:
@@ -37,6 +49,10 @@ class Evidence(models.Model):
             except Exception:
                 pass
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.title} ({self.uploader.username})"
+
 
 class Petition(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="petitions")

@@ -17,7 +17,7 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(Evidence)
 class EvidenceAdmin(admin.ModelAdmin):
-    list_display = ("title", "uploader", "file_type", "uploaded_at", "verification_status")
+    list_display = ("title", "uploader", "file_type", "uploaded_at", "verification_status", "rule_violation", "party_involved", "harm")
     list_filter = ("verification_status", "file_type")
     search_fields = ("title", "uploader__username")
 
