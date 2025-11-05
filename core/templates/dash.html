@@ -519,105 +519,106 @@
                     {% comment %} 3. DEPOSITIONS VIEW (Placeholder) {% endcomment %}
                     {% comment %} ----------------------------------------- {% endcomment %}
                     <div id="depositionsView" style="display: none;">
-                        <div class="header-with-cta">
-                            <div class="header-title">Depositions View</div>
-                        </div>
-                    <!-- Include DataTables CSS & JS -->
-<link rel="stylesheet" 
-      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-<!-- Custom Table Styling -->
-<style>
-  /* Add blue border and cell lines */
-  #evidenceTable {
-    border: 2px solid #007bff !important;
-    border-collapse: collapse !important;
-  }
-  #evidenceTable th,
-  #evidenceTable td {
-    border: 1px solid #007bff !important;
-    padding: 8px 10px !important;
-    text-align: left;
-  }
-  #evidenceTable th {
-    background-color: #eaf3ff !important;
-  }
-  #evidenceTable tr:nth-child(even) {
-    background-color: #f9fbff !important;
-  }
-  #evidenceTable tr:hover {
-    background-color: #e3f0ff !important;
-  }
-</style>
-
-<div class="card" style="margin-bottom: 1rem;">
-  {% if evidences %}
-  <div style="overflow-x: auto;">
-    <table id="evidenceTable" class="display" style="width: 100%;">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Rule Violation</th>
-          <th>Party Involved</th>
-          <th>Harm</th>
-          <th>Type</th>
-          <th>Uploaded At</th>
-          <th>Status</th>
-          <th>Download</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for e in evidences %}
-        <tr>
-          <td>{{ e.title }}</td>
-          <td>{{ e.rule_violation|default:"—" }}</td>
-          <td>{{ e.party_involved|default:"—" }}</td>
-          <td>{{ e.harm|truncatechars:80|default:"—" }}</td>
-          <td>{{ e.file_type }}</td>
-          <td>{{ e.uploaded_at|date:"Y-m-d H:i" }}</td>
-          <td>
-            {% if e.verification_status == "verified" %}
-              <span style="color: green;">Verified</span>
-            {% elif e.verification_status == "rejected" %}
-              <span style="color: red;">Rejected</span>
-            {% else %}
-              <span style="color: orange;">Pending</span>
-            {% endif %}
-          </td>
-          <td>
-            <a href="{{ e.file.url }}" download 
-               style="padding: 5px 10px; background: #007bff; color: #fff; border-radius: 4px; text-decoration: none;">
-               Download
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="header-with-cta">
+    <div class="header-title">Depositions View</div>
   </div>
-  {% else %}
-  <p>No evidences available yet.</p>
-  {% endif %}
+
+  <!-- Include DataTables CSS & JS -->
+  <link rel="stylesheet" 
+        href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+  <!-- Custom Table Styling -->
+  <style>
+    #evidenceTable {
+      border: 2px solid #007bff !important;
+      border-collapse: collapse !important;
+      width: 100%;
+    }
+    #evidenceTable th,
+    #evidenceTable td {
+      border: 1px solid #007bff !important;
+      padding: 8px 10px !important;
+      text-align: left;
+    }
+    #evidenceTable th {
+      background-color: #eaf3ff !important;
+    }
+    #evidenceTable tr:nth-child(even) {
+      background-color: #f9fbff !important;
+    }
+    #evidenceTable tr:hover {
+      background-color: #e3f0ff !important;
+    }
+  </style>
+
+  <div class="card" style="margin-bottom: 1rem;">
+    {% if evidences %}
+    <div style="overflow-x: auto;">
+      <table id="evidenceTable" class="display" style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Rule Violation</th>
+            <th>Party Involved</th>
+            <th>Harm</th>
+            <th>Type</th>
+            <th>Uploaded At</th>
+            <th>Status</th>
+            <th>Download</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in evidences %}
+          <tr>
+            <td>{{ e.title }}</td>
+            <td>{{ e.rule_violation|default:"—" }}</td>
+            <td>{{ e.party_involved|default:"—" }}</td>
+            <td>{{ e.harm|truncatechars:80|default:"—" }}</td>
+            <td>{{ e.file_type }}</td>
+            <td>{{ e.uploaded_at|date:"H:i d-m-Y" }}</td>  <!-- ✅ Time first, then date -->
+            <td>
+              {% if e.verification_status == "verified" %}
+                <span style="color: green;">Verified</span>
+              {% elif e.verification_status == "rejected" %}
+                <span style="color: red;">Rejected</span>
+              {% else %}
+                <span style="color: orange;">Pending</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ e.file.url }}" download 
+                 style="padding: 5px 10px; background: #007bff; color: #fff; border-radius: 4px; text-decoration: none;">
+                 Download
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p>No depositions available yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Activate DataTable -->
+  <script>
+    $(document).ready(function() {
+      $('#evidenceTable').DataTable({
+        pageLength: 5,
+        lengthMenu: [5, 10, 20, 50],
+        order: [[5, 'desc']],
+        columnDefs: [
+          { orderable: false, targets: [7] } // disable sorting on Download column
+        ]
+      });
+    });
+  </script>
 </div>
 
-<!-- Activate DataTable -->
-<script>
-  $(document).ready(function() {
-    $('#evidenceTable').DataTable({
-      pageLength: 5,
-      lengthMenu: [5, 10, 20, 50],
-      order: [[5, 'desc']],
-      columnDefs: [
-        { orderable: false, targets: [7] } // disable sorting on Download column
-      ]
-    });
-  });
-</script>
 
-
-                    </div>
                     {% comment %} ----------------------------------------- {% endcomment %}
                     {% comment %} 4. ACTIVITY VIEW (Placeholder) {% endcomment %}
                     {% comment %} ----------------------------------------- {% endcomment %}
